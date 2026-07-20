@@ -1,0 +1,130 @@
+#version 450
+// HCScoin: Quantum circuit gate application (Clifford+T).
+// This kernel applies a single gate type to the full statevector.
+// Dispatch dimensions: local_size_x must be large enough to cover
+// 2^qubits elements (e.g., 256). Work groups iterate over all pairs.
+
+layout(local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
+
+// Statevector buffer (complex f32 pairs, size 2^qubits)
+layout(std430, binding = 0) buffer StateBuffer { float state[]; };
+
+// Gate parameters
+layout(push_constant) uniform PushConstants {
+    uint gate_type;  // 0=H, 1=X, 2=Z, 3=S, 4=T, 5=CNOT
+    uint wire;       // target wire for single-qubit gates
+    uint control;    // control wire (CNOT)
+    uint target;     // target wire (CNOT)
+    uint qubits;     // total qubits
+    uint size;       // 1u << qubits
+} params;
+
+const float FRAC_1_SQRT_2 = 0.70710677;
+
+// Read/write a complex amplitude at index i
+vec2 load_amp(uint i) {
+    return vec2(state[2*i], state[2*i+1]);
+}
+void store_amp(uint i, vec2 v) {
+    state[2*i] = v.x;
+    state[2*i+1] = v.y;
+}
+
+void hadamard(uint i0, uint i1) {
+    vec2 a = load_amp(i0);
+    vec2 b = load_amp(i1);
+    vec2 s = a + b;
+    vec2 d = a - b;
+    store_amp(i0, s * FRAC_1_SQRT_2);
+    store_amp(i1, d * FRAC_1_SQRT_2);
+}
+
+void pauli_x(uint i0, uint i1) {
+    vec2 a = load_amp(i0);
+    vec2 b = load_amp(i1);
+    store_amp(i0, b);
+    store_amp(i1, a);
+}
+
+void pauli_z(uint i0, uint i1) {
+    vec2 a = load_amp(i0);
+    vec2 b = load_amp(i1);
+    store_amp(i0, a);
+    store_amp(i1, vec2(-b.x, -b.y));
+}
+
+void s_gate(uint i0, uint i1) {
+    vec2 a = load_amp(i0);
+    vec2 b = load_amp(i1);
+    store_amp(i0, a);
+    store_amp(i1, vec2(-b.y, b.x)); // b * i
+}
+
+void t_gate(uint i0, uint i1) {
+    vec2 a = load_amp(i0);
+    vec2 b = load_amp(i1);
+    store_amp(i0, a);
+    float re = (b.x - b.y) * FRAC_1_SQRT_2;
+    float im = (b.x + b.y) * FRAC_1_SQRT_2;
+    store_amp(i1, vec2(re, im));
+}
+
+void cnot_gate(uint i) {
+    // CNOT: for index i with both control and target bits set
+    float re = state[2*i];
+    float im = state[2*i+1];
+    uint mask = (1u << params.target);
+    uint partner = i ^ mask;
+    // The state at partner has control_bit = 1, target_bit = 0
+    // The state at i has control_bit = 1, target_bit = 1
+    // Swap them
+    float pre = state[2*partner];
+    float pim = state[2*partner+1];
+    state[2*partner] = re;
+    state[2*partner+1] = im;
+    state[2*i] = pre;
+    state[2*i+1] = pim;
+}
+
+void main() {
+    uint tid = gl_GlobalInvocationID.x;
+    uint half = 1u << params.wire;
+    uint step = half << 1;
+    uint block = tid / half;
+    uint i0 = block * step + (tid % half);
+    uint i1 = i0 + half;
+
+    if (i1 >= params.size) return;
+
+    switch (params.gate_type) {
+        case 0: hadamard(i0, i1); break;
+        case 1: pauli_x(i0, i1); break;
+        case 2: pauli_z(i0, i1); break;
+        case 3: s_gate(i0, i1); break;
+        case 4: t_gate(i0, i1); break;
+        case 5: /* CNOT handled in second dispatch */ break;
+    }
+}
+
+// Second entry point for CNOT (needs different iteration)
+// Dispatch with global_size = size / 2
+layout(local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
+layout(location = 0) uniform uint cn_mask; // control bit mask
+
+void cnot_main() {
+    uint i = gl_GlobalInvocationID.x * 2;
+    if (i >= params.size) return;
+    // Check if this index has control = 1 and target = 0
+    uint cmask = 1u << params.control;
+    uint tmask = 1u << params.target;
+    if ((i & cmask) != 0 && (i & tmask) == 0) {
+        // This pair needs swapping: i and i|tmask both have control=1
+        // But they are not in the same pair under single-qubit iteration
+        // So we use a direct swap
+        uint j = i | tmask;
+        vec2 vi = load_amp(i);
+        vec2 vj = load_amp(j);
+        store_amp(i, vj);
+        store_amp(j, vi);
+    }
+}

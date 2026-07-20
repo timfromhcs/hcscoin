@@ -1,0 +1,28 @@
+{
+    "chain": "testnet4",
+    "version": 1,
+    "genesis": {
+        "hash": "0000018e8772731eca31a20dc43bc1eceaea42c1a81fb5a4971f23cfb6d1f9e4",
+        "merkle_root": "d0ad4e8d4987ab763bc753a6b3c00cc820b86fc5fca525dfc6a273f5930ee2e3",
+        "timestamp": 1784506800,
+        "nbits": "1e0fffff",
+        "nonce": 1039867,
+        "quantum_nonce": 0,
+        "version": 1,
+        "subsidy": 50
+    },
+    "params": {
+        "halving_interval": 840000,
+        "pow_limit": "00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "pow_target_spacing": 600,
+        "pow_target_timespan": 1209600,
+        "quantum_pow_limit": "7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "quantum_qubits": 27,
+        "allow_min_difficulty": true,
+        "p2p_port": 28338,
+        "rpc_port": 28339
+    },
+    "dns_seeds": [
+        "testnet4-seed.hcscoin.net"
+    ]
+}

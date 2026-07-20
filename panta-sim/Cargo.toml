@@ -1,0 +1,29 @@
+[package]
+name = "panta-sim"
+version = "1.0.0"
+edition = "2021"
+description = "HCScoin Panta-Sim quantum circuit emulator (CPU statevector core, optional wgpu GPU backend)"
+license = "MIT"
+
+# HCScoin: built as a Rust library for tests AND as C ABI (static/shared)
+# for linking into hcscoind (see src/consensus/quantum.cpp).
+[lib]
+name = "panta_sim"
+crate-type = ["rlib", "staticlib", "cdylib"]
+
+[features]
+default = []
+# Optional GPU acceleration via wgpu/Vulkan. CPU statevector fallback is
+# always compiled in. Build with: cargo build --release --features gpu
+gpu = ["dep:wgpu", "dep:pollster", "dep:bytemuck"]
+
+[dependencies]
+# NOTE: the default (CPU) build is intentionally dependency-free so it
+# compiles fully offline.
+wgpu = { version = "22", optional = true }
+pollster = { version = "0.3", optional = true }
+bytemuck = { version = "1", optional = true }
+
+[profile.release]
+opt-level = 3
+lto = true

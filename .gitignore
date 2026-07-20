@@ -1,0 +1,60 @@
+# Build subdirectories.
+/*build*
+!/build-aux
+!/build_msvc
+
+# Executables / compiled artifacts
+*.exe
+*.dll
+*.so
+*.dylib
+*.o
+*.obj
+*.a
+*.lib
+*.pyc
+*.pyo
+
+# Only ignore unexpected patches
+*.patch
+!ci/test/*.patch
+!contrib/guix/patches/*.patch
+!depends/patches/**/*.patch
+
+/CMakeUserPresets.json
+
+# HCScoin: Panta-Sim Rust build artifacts
+panta-sim/target/
+
+# HCScoin: build artifacts in test/standalone
+test/standalone/*.exe
+test/standalone/dil_out.txt
+test/standalone/probe_*.exe
+
+# HCScoin: build artifacts in tools/genesis
+tools/genesis/*.exe
+
+# HCScoin: quantum-miner build
+quantum-miner/build/
+
+# Previous releases
+/releases
+
+# cargo default target dir
+target/
+
+/guix-build-*
+
+/ci/scratch/
+
+# IDE / OS artifacts
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+*.suo
+*.user
+*.vs/
