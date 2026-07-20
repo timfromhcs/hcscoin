@@ -2,9 +2,9 @@ name: Build HCScoin Binaries
 
 on:
   push:
-    branches: [ master ]
+    branches: [ master, main ]
   pull_request:
-    branches: [ master ]
+    branches: [ master, main ]
 
 jobs:
   build-windows:
@@ -19,27 +19,30 @@ jobs:
           choco install -y ninja
           choco install -y rustup.install
           choco install -y python3
-          # Vulkan SDK (latest)
-          $env:VULKAN_SDK = "C:\VulkanSDK\1.3.268.0"
-          Invoke-WebRequest -Uri https://sdk.lunarg.com/sdk/download/1.3.268.0/windows/VulkanSDK-1.3.268.0-Installer.exe?Human=true -OutFile VulkanSDK.exe -UseBasicParsing
-          .\VulkanSDK.exe /S
-          Write-Host "Vulkan SDK installed at $env:VULKAN_SDK"
-          # Boost libraries for Windows
+          choco install -y vulkan-sdk
           choco install -y boost-msvc-14.2
-          Write-Host "Boost installed"
+          Write-Host "Dependencies installed"
 
       - name: Setup Rust toolchain
         run: rustup default stable
 
-      - name: Configure CMake
+      - name: Build panta-sim
+        run: |
+          cd panta-sim
+          cargo build --release
+
+      - name: Build HCScoin Core
         run: |
           mkdir build
           cd build
           cmake -G "Ninja" -DCMAKE_BUILD_TYPE=Release -DBUILD_GUI=OFF ..
+          cmake --build . --config Release
 
-      - name: Build
+      - name: Build quantum-miner
         run: |
-          cd build
+          mkdir quantum-miner\build
+          cd quantum-miner\build
+          cmake -G "Ninja" -DCMAKE_BUILD_TYPE=Release ..
           cmake --build . --config Release
 
       - name: Gather binaries
@@ -47,7 +50,7 @@ jobs:
           mkdir artifacts
           copy build\src\hcscoind.exe artifacts\
           copy build\src\hcscoin-cli.exe artifacts\
-          copy quantum-miner\build\quantum_miner.exe artifacts\
+          copy quantum-miner\build\vulkan_miner.exe artifacts\
           copy panta-sim\target\release\panta_sim.dll artifacts\
 
       - name: Upload artifacts
@@ -70,15 +73,24 @@ jobs:
           curl https://sh.rustup.rs -sSf | sh -s -- -y
           source $HOME/.cargo/env
 
-      - name: Configure CMake
+      - name: Build panta-sim
+        run: |
+          source $HOME/.cargo/env
+          cd panta-sim
+          cargo build --release
+
+      - name: Build HCScoin Core
         run: |
           mkdir build
           cd build
           cmake -G "Ninja" -DCMAKE_BUILD_TYPE=Release -DBUILD_GUI=OFF ..
+          cmake --build . --config Release
 
-      - name: Build
+      - name: Build quantum-miner
         run: |
-          cd build
+          mkdir quantum-miner/build
+          cd quantum-miner/build
+          cmake -G "Ninja" -DCMAKE_BUILD_TYPE=Release ..
           cmake --build . --config Release
 
       - name: Gather binaries
@@ -86,7 +98,7 @@ jobs:
           mkdir artifacts
           cp build/src/hcscoind artifacts/
           cp build/src/hcscoin-cli artifacts/
-          cp quantum-miner/quantum_miner artifacts/
+          cp quantum-miner/build/vulkan_miner artifacts/
           cp panta-sim/target/release/libpanta_sim.so artifacts/
 
       - name: Upload artifacts
@@ -94,3 +106,4 @@ jobs:
         with:
           name: hcscoin-linux-binaries
           path: artifacts/*
+

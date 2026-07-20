@@ -57,28 +57,36 @@ void sha256_compress(inout uint s[8], uint w[64]) {
     s[4] += e; s[5] += f; s[6] += g; s[7] += h;
 }
 
-// SHA-256d: dsha256(data, 80) → 32 bytes
 void dsha256(uint data[20], out uint out_hash[8]) {
     uint s[8] = {
         0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a,
         0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19
     };
-    uint w[64] = {0};
-    for (uint i = 0; i < 20; ++i) w[i] = data[i]; // big-endian from header
-    w[20] = 0x80000000;
-    w[15] = 80 * 8;
+    uint w[64];
+
+    // First block: 64 bytes (16 uints)
+    for (uint i = 0; i < 16; ++i) w[i] = data[i];
     sha256_compress(s, w);
+
+    // Second block: 16 bytes (4 uints) + padding + 640-bit length
+    for (uint i = 0; i < 4; ++i) w[i] = data[16 + i];
+    w[4] = 0x80000000;
+    for (uint i = 5; i < 15; ++i) w[i] = 0;
+    w[15] = 80 * 8; // 640
+    sha256_compress(s, w);
+
     uint mid[8];
     for (uint i = 0; i < 8; ++i) mid[i] = s[i];
 
-    // Second SHA-256
+    // Second SHA-256 pass: 32 bytes (8 uints) + padding + 256-bit length
     s[0] = 0x6a09e667; s[1] = 0xbb67ae85; s[2] = 0x3c6ef372; s[3] = 0xa54ff53a;
     s[4] = 0x510e527f; s[5] = 0x9b05688c; s[6] = 0x1f83d9ab; s[7] = 0x5be0cd19;
     for (uint i = 0; i < 8; ++i) w[i] = mid[i];
     w[8] = 0x80000000;
-    w[15] = 32 * 8;
     for (uint i = 9; i < 15; ++i) w[i] = 0;
+    w[15] = 32 * 8; // 256
     sha256_compress(s, w);
+
     for (uint i = 0; i < 8; ++i) out_hash[i] = s[i];
 }
 

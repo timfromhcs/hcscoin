@@ -70,6 +70,7 @@ endif()
 add_library(bitcoin_consensus STATIC EXCLUDE_FROM_ALL
   arith_uint256.cpp
   consensus/merkle.cpp
+  consensus/quantum.cpp
   consensus/tx_check.cpp
   hash.cpp
   primitives/block.cpp
@@ -118,6 +119,7 @@ add_library(bitcoin_common STATIC EXCLUDE_FROM_ALL
   compressor.cpp
   core_io.cpp
   deploymentinfo.cpp
+  dilithium_key.cpp
   external_signer.cpp
   init/common.cpp
   kernel/chainparams.cpp
