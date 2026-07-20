@@ -29,7 +29,10 @@ function(add_boost_if_needed)
     endif()
   endif()
 
-  find_package(Boost 1.74.0 REQUIRED CONFIG)
+  find_package(Boost 1.74.0 QUIET CONFIG)
+  if(NOT Boost_FOUND)
+    find_package(Boost 1.74.0 REQUIRED)
+  endif()
   mark_as_advanced(Boost_INCLUDE_DIR boost_headers_DIR)
   set_target_properties(Boost::headers PROPERTIES IMPORTED_GLOBAL TRUE)
   target_compile_definitions(Boost::headers INTERFACE

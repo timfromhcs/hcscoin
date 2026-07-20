@@ -33,9 +33,14 @@ jobs:
 
       - name: Build HCScoin Core
         run: |
+          $boostPath = Get-ChildItem "C:\local" -Filter "boost_*" -ErrorAction SilentlyContinue | Select-Object -First 1 -ExpandProperty FullName
+          if (-not $boostPath) { $boostPath = "C:\local\boost_1_74_0" }
+          $env:BOOST_ROOT = $boostPath
+          Write-Host "Using BOOST_ROOT=$env:BOOST_ROOT"
+          echo "BOOST_ROOT=$env:BOOST_ROOT" >> $env:GITHUB_ENV
           mkdir build
           cd build
-          cmake -G "Ninja" -DCMAKE_BUILD_TYPE=Release -DBUILD_GUI=OFF ..
+          cmake -G "Ninja" -DCMAKE_BUILD_TYPE=Release -DBUILD_GUI=OFF -DENABLE_WALLET=OFF -DWITH_ZMQ=OFF -DBOOST_ROOT="$env:BOOST_ROOT" ..
           cmake --build . --config Release
 
       - name: Build quantum-miner
@@ -69,7 +74,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y build-essential cmake ninja-build python3 python3-pip git
-          sudo apt-get install -y libvulkan-dev vulkan-tools libboost-all-dev
+          sudo apt-get install -y libvulkan-dev vulkan-tools glslang-dev glslang-tools libboost-all-dev libsqlite3-dev libevent-dev
           curl https://sh.rustup.rs -sSf | sh -s -- -y
           source $HOME/.cargo/env
 
@@ -83,7 +88,7 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake -G "Ninja" -DCMAKE_BUILD_TYPE=Release -DBUILD_GUI=OFF ..
+          cmake -G "Ninja" -DCMAKE_BUILD_TYPE=Release -DBUILD_GUI=OFF -DENABLE_WALLET=OFF -DWITH_ZMQ=OFF ..
           cmake --build . --config Release
 
       - name: Build quantum-miner

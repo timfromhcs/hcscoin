@@ -3,13 +3,13 @@
   "configurePresets": [
     {
       "name": "vs2026",
-      "displayName": "Build using 'Visual Studio 18 2026' generator and 'x64-windows' triplet",
+      "displayName": "Build using 'Visual Studio 17 2022' generator and 'x64-windows' triplet",
       "condition": {
         "type": "equals",
         "lhs": "${hostSystemName}",
         "rhs": "Windows"
       },
-      "generator": "Visual Studio 18 2026",
+      "generator": "Visual Studio 17 2022",
       "architecture": "x64",
       "toolchainFile": "$env{VCPKG_ROOT}\\scripts\\buildsystems\\vcpkg.cmake",
       "cacheVariables": {
@@ -20,13 +20,13 @@
     },
     {
       "name": "vs2026-static",
-      "displayName": "Build using 'Visual Studio 18 2026' generator and 'x64-windows-static' triplet",
+      "displayName": "Build using 'Visual Studio 17 2022' generator and 'x64-windows-static' triplet",
       "condition": {
         "type": "equals",
         "lhs": "${hostSystemName}",
         "rhs": "Windows"
       },
-      "generator": "Visual Studio 18 2026",
+      "generator": "Visual Studio 17 2022",
       "architecture": "x64",
       "toolchainFile": "$env{VCPKG_ROOT}\\scripts\\buildsystems\\vcpkg.cmake",
       "cacheVariables": {
