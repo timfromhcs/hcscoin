@@ -33,7 +33,7 @@ WORKDIR /root/
 COPY --from=builder /build/build/src/hcscoind /usr/local/bin/
 COPY --from=builder /build/build/src/hcscoin-cli /usr/local/bin/
 COPY --from=builder /build/panta-sim/target/release/libpanta_sim.so /usr/local/lib/
-COPY --from=builder /build/panta-sim/target/release/panta_sim.h /usr/local/include/
+COPY --from=builder /build/src/consensus/quantum_ffi.h /usr/local/include/panta_sim.h
 
 RUN ldconfig
 

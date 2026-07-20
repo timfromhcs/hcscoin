@@ -36,7 +36,7 @@ runs:
     - name: Restore cache with GitHub Actions
       id: gha
       if: ${{ inputs.provider == 'gha' }}
-      uses: actions/cache/restore@v5
+      uses: actions/cache/restore@v4
       with:
         path: ${{ inputs.path }}
         key: ${{ inputs.key }}

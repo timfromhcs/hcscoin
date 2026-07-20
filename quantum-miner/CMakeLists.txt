@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.22)
 project(hcscoin-vulkan-miner LANGUAGES CXX)
 
 find_package(Vulkan REQUIRED)
-find_package(glslangValidator QUIET)
+find_program(GLSLANG_VALIDATOR NAMES glslangValidator glslangValidator.exe HINTS $ENV{VULKAN_SDK}/bin C:/VulkanSDK/1.4.350.0/Bin)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -26,13 +26,13 @@ set(SHADER_SOURCES
     shaders/quantum_gates.comp
 )
 
-if(glslangValidator_FOUND)
+if(GLSLANG_VALIDATOR)
     foreach(shader ${SHADER_SOURCES})
         get_filename_component(shader_name ${shader} NAME_WE)
         set(spv_output ${CMAKE_CURRENT_BINARY_DIR}/${shader_name}.spv)
         add_custom_command(
             OUTPUT ${spv_output}
-            COMMAND glslangValidator -V ${shader} -o ${spv_output}
+            COMMAND ${GLSLANG_VALIDATOR} -V ${CMAKE_CURRENT_SOURCE_DIR}/${shader} -o ${spv_output}
             DEPENDS ${shader}
             COMMENT "Compiling ${shader} → ${spv_output}"
         )

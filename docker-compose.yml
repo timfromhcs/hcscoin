@@ -3,7 +3,7 @@ services:
   # Testnet4 seed node
   seed:
     build:
-      context: ..
+      context: .
       dockerfile: Dockerfile
     container_name: hcscoin-seed
     ports:
@@ -24,7 +24,7 @@ services:
   # Faucet
   faucet:
     build:
-      context: ..
+      context: .
       dockerfile: Dockerfile
     container_name: hcscoin-faucet
     depends_on: [seed]
