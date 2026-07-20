@@ -24,6 +24,9 @@ jobs:
           Invoke-WebRequest -Uri https://sdk.lunarg.com/sdk/download/1.3.268.0/windows/VulkanSDK-1.3.268.0-Installer.exe?Human=true -OutFile VulkanSDK.exe -UseBasicParsing
           .\VulkanSDK.exe /S
           Write-Host "Vulkan SDK installed at $env:VULKAN_SDK"
+          # Boost libraries for Windows
+          choco install -y boost-msvc-14.2
+          Write-Host "Boost installed"
 
       - name: Setup Rust toolchain
         run: rustup default stable
