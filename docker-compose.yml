@@ -1,53 +1,22 @@
-version: '3.8'
 services:
-  # Testnet4 seed node
-  seed:
+  node:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: hcscoin-seed
+    image: hcscoin:local
+    container_name: hcscoin-node
+    restart: unless-stopped
     ports:
-      - "28338:28338"
-      - "28339:28339"
+      - "28333:28333" # mainnet P2P
+      - "127.0.0.1:28332:28332" # mainnet RPC, local only
     volumes:
-      - hcscoin-seed-data:/root/.hcscoin
-    environment:
-      - HCSCOIN_CHAIN=testnet4
-      - HCSCOIN_QUANTUM_QUBITS=27
-    command: >
-      hcscoind -testnet4 -daemon=0
-      -printtoconsole -listen=1 -server=1
-      -rpcuser=hcscoin -rpcpassword=hcscoin
-      -rpcallowip=172.16.0.0/12
-      -rpcbind=0.0.0.0
-
-  # Faucet
-  faucet:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: hcscoin-faucet
-    depends_on: [seed]
-    ports:
-      - "28380:28380"
-    command: >
-      python3 testnet/faucet.py
-      --cli=/usr/local/bin/hcscoin-cli
-      --testnet4 --amount=10 --port=28380
-
-  # GPU miner (requires Vulkan passthrough)
-  miner-gpu:
-    image: hcscoin/quantum-miner:latest
-    container_name: hcscoin-miner
-    depends_on: [seed]
-    devices:
-      - /dev/dri:/dev/dri   # Intel/AMD
-      - /dev/nvidia0:/dev/nvidia0  # NVIDIA
-    environment:
-      - VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/nvidia_icd.json
-    command: >
-      vulkan_miner -m testnet4 -u http://seed:28339
-      -U hcscoin -P hcscoin
+      - hcscoin-data:/root/.hcscoin
+    command:
+      - -daemon=0
+      - -printtoconsole
+      - -server=1
+      - -rpcbind=0.0.0.0
+      - -rpcallowip=172.16.0.0/12
 
 volumes:
-  hcscoin-seed-data:
+  hcscoin-data:

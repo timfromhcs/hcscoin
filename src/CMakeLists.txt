@@ -303,21 +303,23 @@ if(WITH_EMBEDDED_ASMAP)
   )
 endif()
 
-# Bitcoin wrapper executable that can call other executables.
+# HCScoin wrapper executable that can call other executables.
 if(BUILD_BITCOIN_BIN)
   add_executable(bitcoin bitcoin.cpp)
+  set_target_properties(bitcoin PROPERTIES OUTPUT_NAME hcscoin)
   add_windows_resources(bitcoin bitcoin-res.rc)
   add_windows_application_manifest(bitcoin)
   target_link_libraries(bitcoin core_interface bitcoin_common bitcoin_util)
   install_binary_component(bitcoin HAS_MANPAGE)
 endif()
 
-# Bitcoin Core bitcoind.
+# HCScoin Core daemon.
 if(BUILD_DAEMON)
   add_executable(bitcoind
     bitcoind.cpp
     init/bitcoind.cpp
   )
+  set_target_properties(bitcoind PROPERTIES OUTPUT_NAME hcscoind)
   add_windows_resources(bitcoind bitcoind-res.rc)
   add_windows_application_manifest(bitcoind)
   target_link_libraries(bitcoind
@@ -332,6 +334,7 @@ if(ENABLE_IPC AND BUILD_DAEMON)
     bitcoind.cpp
     init/bitcoin-node.cpp
   )
+  set_target_properties(bitcoin-node PROPERTIES OUTPUT_NAME hcscoin-node)
   target_link_libraries(bitcoin-node
     core_interface
     bitcoin_node
@@ -353,9 +356,10 @@ target_link_libraries(bitcoin_cli
 )
 
 
-# Bitcoin Core RPC client
+# HCScoin Core RPC client.
 if(BUILD_CLI)
   add_executable(bitcoin-cli bitcoin-cli.cpp init/basic.cpp)
+  set_target_properties(bitcoin-cli PROPERTIES OUTPUT_NAME hcscoin-cli)
   add_windows_resources(bitcoin-cli bitcoin-cli-res.rc)
   add_windows_application_manifest(bitcoin-cli)
   target_link_libraries(bitcoin-cli
