@@ -1,114 +1,90 @@
-name: Build HCScoin Binaries
+name: Build HCScoin
 
 on:
   push:
-    branches: [ master, main ]
+    branches: [master, main]
   pull_request:
-    branches: [ master, main ]
+    branches: [master, main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  build-windows:
-    runs-on: windows-2022
+  linux-headless:
+    name: Linux headless build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Install dependencies
-        run: |
-          choco install -y cmake --installargs 'ADD_CMAKE_TO_PATH=System'
-          choco install -y ninja
-          choco install -y rustup.install
-          choco install -y python3
-          choco install -y vulkan-sdk
-          choco install -y boost-msvc-14.2
-          Write-Host "Dependencies installed"
-
-      - name: Setup Rust toolchain
-        run: rustup default stable
-
-      - name: Build panta-sim
-        run: |
-          cd panta-sim
-          cargo build --release
-
-      - name: Build HCScoin Core
-        run: |
-          $boostPath = Get-ChildItem "C:\local" -Filter "boost_*" -ErrorAction SilentlyContinue | Select-Object -First 1 -ExpandProperty FullName
-          if (-not $boostPath) { $boostPath = "C:\local\boost_1_74_0" }
-          $env:BOOST_ROOT = $boostPath
-          Write-Host "Using BOOST_ROOT=$env:BOOST_ROOT"
-          echo "BOOST_ROOT=$env:BOOST_ROOT" >> $env:GITHUB_ENV
-          mkdir build
-          cd build
-          cmake -G "Ninja" -DCMAKE_BUILD_TYPE=Release -DBUILD_GUI=OFF -DENABLE_WALLET=OFF -DWITH_ZMQ=OFF -DBOOST_ROOT="$env:BOOST_ROOT" ..
-          cmake --build . --config Release
-
-      - name: Build quantum-miner
-        run: |
-          mkdir quantum-miner\build
-          cd quantum-miner\build
-          cmake -G "Ninja" -DCMAKE_BUILD_TYPE=Release ..
-          cmake --build . --config Release
-
-      - name: Gather binaries
-        run: |
-          mkdir artifacts
-          copy build\src\hcscoind.exe artifacts\
-          copy build\src\hcscoin-cli.exe artifacts\
-          copy quantum-miner\build\vulkan_miner.exe artifacts\
-          copy panta-sim\target\release\panta_sim.dll artifacts\
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: hcscoin-windows-binaries
-          path: artifacts/*
-
-  build-linux:
-    runs-on: ubuntu-22.04
-    steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential cmake ninja-build python3 python3-pip git
-          sudo apt-get install -y libvulkan-dev vulkan-tools glslang-dev glslang-tools libboost-all-dev libsqlite3-dev libevent-dev
-          curl https://sh.rustup.rs -sSf | sh -s -- -y
-          source $HOME/.cargo/env
+          sudo apt-get install -y --no-install-recommends \
+            build-essential \
+            ccache \
+            cmake \
+            git \
+            libboost-dev \
+            libevent-dev \
+            libsqlite3-dev \
+            ninja-build \
+            pkg-config \
+            python3
 
-      - name: Build panta-sim
+      - name: Configure
         run: |
-          source $HOME/.cargo/env
-          cd panta-sim
-          cargo build --release
+          cmake -S . -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DBUILD_GUI=OFF \
+            -DENABLE_WALLET=OFF \
+            -DENABLE_IPC=OFF \
+            -DWITH_ZMQ=OFF
 
-      - name: Build HCScoin Core
-        run: |
-          mkdir build
-          cd build
-          cmake -G "Ninja" -DCMAKE_BUILD_TYPE=Release -DBUILD_GUI=OFF -DENABLE_WALLET=OFF -DWITH_ZMQ=OFF ..
-          cmake --build . --config Release
+      - name: Build
+        run: cmake --build build --parallel 2
 
-      - name: Build quantum-miner
+      - name: Smoke test binaries
         run: |
-          mkdir quantum-miner/build
-          cd quantum-miner/build
-          cmake -G "Ninja" -DCMAKE_BUILD_TYPE=Release ..
-          cmake --build . --config Release
+          test -x build/bin/hcscoind
+          test -x build/bin/hcscoin-cli
+          build/bin/hcscoind --version
+          build/bin/hcscoin-cli --version
 
-      - name: Gather binaries
+      - name: Package artifacts
         run: |
-          mkdir artifacts
-          cp build/src/hcscoind artifacts/
-          cp build/src/hcscoin-cli artifacts/
-          cp quantum-miner/build/vulkan_miner artifacts/
-          cp panta-sim/target/release/libpanta_sim.so artifacts/
+          mkdir -p artifacts
+          cp build/bin/hcscoin artifacts/ || true
+          cp build/bin/hcscoind artifacts/
+          cp build/bin/hcscoin-cli artifacts/
+          cp build/bin/bitcoin-tx artifacts/hcscoin-tx || true
+          cp build/bin/bitcoin-util artifacts/hcscoin-util || true
+          tar -C artifacts -czf hcscoin-linux-x86_64.tar.gz .
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: hcscoin-linux-binaries
-          path: artifacts/*
+          name: hcscoin-linux-x86_64
+          path: hcscoin-linux-x86_64.tar.gz
 
+  docker:
+    name: Docker image build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t hcscoin:ci .
+
+      - name: Smoke test Docker image
+        run: docker run --rm hcscoin:ci --version

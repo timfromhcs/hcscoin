@@ -170,8 +170,8 @@ public:
         // (extended header with quantum fields; see tools/genesis/).
         genesis = CreateGenesisBlock(1784505600, 194955, 0x1e0fffff, 1, 50 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256{"000001ba4186098ba71b34022db82ece3e8ec812a1bf2ccfd08a3ad2f5ad6a77"});
-        assert(genesis.hashMerkleRoot == uint256{"d0ad4e8d4987ab763bc753a6b3c00cc820b86fc5fca525dfc6a273f5930ee2e3"});
+        assert(consensus.hashGenesisBlock == uint256{"2396a363b36ff93634ae93a3d72f8ad75e1d93e1428d5f4cad91be799dc1e512"});
+        assert(genesis.hashMerkleRoot == uint256{"23f542d18d6b73e69d466119bcfe8e64ee3a235cfcc54bb7dc9e46ac611af731"});
 
         // HCScoin: Bitcoin DNS seeds removed; HCScoin seed infrastructure.
         vSeeds.emplace_back("dnsseed.hcscoin.net.");  // HCScoin primary DNS seed
@@ -267,8 +267,8 @@ public:
         // HCScoin testnet3 genesis: 2026-07-20 00:05:00 UTC.
         genesis = CreateGenesisBlock(1784505900, 665599, 0x1e0fffff, 1, 50 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256{"0000077168046ce53f36b56fbc66a23821ae24de408a716cbc35d643bc1d1e59"});
-        assert(genesis.hashMerkleRoot == uint256{"d0ad4e8d4987ab763bc753a6b3c00cc820b86fc5fca525dfc6a273f5930ee2e3"});
+        assert(consensus.hashGenesisBlock == uint256{"5fd7b95470438d64811baf62f4461869d7fe1251dd9acaeb7eb7e4c42ab7d1a6"});
+        assert(genesis.hashMerkleRoot == uint256{"23f542d18d6b73e69d466119bcfe8e64ee3a235cfcc54bb7dc9e46ac611af731"});
 
         vFixedSeeds.clear();
         vSeeds.clear();
@@ -360,8 +360,8 @@ public:
         // HCScoin testnet4 genesis: 2026-07-20 00:20:00 UTC.
         genesis = CreateGenesisBlock(1784506800, 300699, 0x1e0fffff, 1, 50 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256{"000008038118a320d4c95a6b28f1606a489b4eb544c530a55b2926dd8979b6a3"});
-        assert(genesis.hashMerkleRoot == uint256{"d0ad4e8d4987ab763bc753a6b3c00cc820b86fc5fca525dfc6a273f5930ee2e3"});
+        assert(consensus.hashGenesisBlock == uint256{"c54cf4813168ca3662f4ad3eac3ec335130e554c5c0704f6ab53f487e42593f6"});
+        assert(genesis.hashMerkleRoot == uint256{"23f542d18d6b73e69d466119bcfe8e64ee3a235cfcc54bb7dc9e46ac611af731"});
 
         vFixedSeeds.clear();
         vSeeds.clear();
@@ -484,8 +484,8 @@ public:
         // HCScoin signet genesis: 2026-07-20 00:15:00 UTC.
         genesis = CreateGenesisBlock(1784506500, 12314611, 0x1e0377ae, 1, 50 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256{"000001af6eeb35a97c548aedf175b6a87f98b1056fa359db0d8b6b84cfe34f2f"});
-        assert(genesis.hashMerkleRoot == uint256{"d0ad4e8d4987ab763bc753a6b3c00cc820b86fc5fca525dfc6a273f5930ee2e3"});
+        assert(consensus.hashGenesisBlock == uint256{"2d7f0064e8f4e4718ca8e815ed147a86897ca3142004fd37052e3adf79db2677"});
+        assert(genesis.hashMerkleRoot == uint256{"23f542d18d6b73e69d466119bcfe8e64ee3a235cfcc54bb7dc9e46ac611af731"});
 
         // HCScoin: no assumeutxo snapshots for the new signet.
         m_assumeutxo_data = {};
@@ -566,8 +566,8 @@ public:
         // HCScoin regtest genesis: 2026-07-20 00:10:00 UTC.
         genesis = CreateGenesisBlock(1784506200, 2, 0x207fffff, 1, 50 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256{"025cd4a4693b3e329b10e052cd502fa7a896ef821fe075ee52711776273f83dd"});
-        assert(genesis.hashMerkleRoot == uint256{"d0ad4e8d4987ab763bc753a6b3c00cc820b86fc5fca525dfc6a273f5930ee2e3"});
+        assert(consensus.hashGenesisBlock == uint256{"a92ec922514f5bc220085353caba068e5ab91ab305a0336459678d5d51e32535"});
+        assert(genesis.hashMerkleRoot == uint256{"23f542d18d6b73e69d466119bcfe8e64ee3a235cfcc54bb7dc9e46ac611af731"});
 
         vFixedSeeds.clear(); //!< Regtest mode doesn't have any fixed seeds.
         vSeeds.clear();

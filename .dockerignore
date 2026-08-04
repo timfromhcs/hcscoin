@@ -1,0 +1,17 @@
+.git
+.github
+build
+build-*
+build_*
+cmake-build-*
+**/target
+**/.pytest_cache
+**/__pycache__
+*.o
+*.a
+*.so
+*.dylib
+*.dll
+*.exe
+*.log
+.DS_Store

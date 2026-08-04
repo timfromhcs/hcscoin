@@ -1,98 +1,100 @@
-# HCScoin Build & Install Guide
+# Build and install HCScoin
 
-## Prerequisites
+This guide documents the maintained headless build used by local development, Docker, and GitHub Actions.
 
-- **OS**: Ubuntu 22.04 / 24.04 x86_64 (recommended), macOS 14+, Windows 10+ (WSL2 or MSVC)
-- **Compiler**: GCC 11+ or Clang 16+, or MSVC 17.x (VS BuildTools 2024+)
-- **CMake** ≥ 3.22
-- **Rust** (for the Panta-Sim quantum emulator): `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`
-- **GPU Driver** (optional, for quantum proof acceleration):
-  - Vulkan 1.2+ driver for your GPU (NVIDIA ≥ 535, AMD ≥ 23.10, Intel ≥ 107.8316)
-  - Apple Metal supported via MoltenVK
+## Supported build
 
-## Quick Build
+- OS: Ubuntu 22.04 or 24.04 x86_64
+- Compiler: GCC 11+ or Clang 16+
+- Build system: CMake 3.22+ with Ninja
+- Default deliverables:
+  - `build/bin/hcscoin`
+  - `build/bin/hcscoind`
+  - `build/bin/hcscoin-cli`
 
-### From source (Ubuntu)
+Wallet, GUI, ZMQ, and IPC can be enabled later, but the default reliable build keeps them disabled to minimize external dependencies.
 
-```bash
-# Dependencies
-sudo apt install build-essential cmake libevent-dev libsqlite3-dev \
-    libboost-dev libboost-multi-index-dev
-
-# Clone and build
-cd /workspace
-git clone https://github.com/hcscoin/hcscoin
-cd hcscoin
-cmake -B build -DCMAKE_BUILD_TYPE=Release \
-    -DBUILD_GUI=OFF -DWITH_ZMQ=OFF -DENABLE_WALLET=ON \
-    -DENABLE_EXTERNAL_SIGNER=OFF -DBUILD_TESTS=OFF
-cmake --build build -j$(nproc)
-
-# Build the Panta-Sim quantum backend
-cd panta-sim
-cargo build --release
-cd ..
-
-# Create symlinks for the daemon and CLI
-ln -sf build/src/hcscoind hcscoind
-ln -sf build/src/hcscoin-cli hcscoin-cli
-```
-
-### Windows (MSVC + vcpkg)
-
-Open "x64 Native Tools Command Prompt for VS" (or Developer PowerShell):
-
-```powershell
-cd C:\hcscoin
-cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release `
-    -DBUILD_GUI=OFF -DWITH_ZMQ=OFF -DENABLE_WALLET=ON `
-    -DENABLE_EXTERNAL_SIGNER=OFF -DBUILD_TESTS=OFF
-ninja -C build
-```
-
-### Windows (WSL2 Ubuntu)
-
-Same as Linux build above; GPU passthrough requires the Vulkan loader:
+## Dependencies
 
 ```bash
-sudo apt install mesa-vulkan-drivers libvulkan1
+sudo apt-get update
+sudo apt-get install -y --no-install-recommends \
+  build-essential \
+  ccache \
+  cmake \
+  git \
+  libboost-dev \
+  libevent-dev \
+  libsqlite3-dev \
+  ninja-build \
+  pkg-config \
+  python3
 ```
 
-## Configuration
+Optional features require extra packages:
 
-Create `~/.hcscoin/hcscoin.conf`:
+- ZMQ: `libzmq3-dev`
+- Wallet: Berkeley DB / SQLite wallet dependencies depending on configuration
+- IPC: Cap'n Proto and libmultiprocess dependencies
+- GUI: Qt 6 development packages
 
+## Configure
+
+```bash
+cmake -S . -B build -G Ninja \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DBUILD_GUI=OFF \
+  -DENABLE_WALLET=OFF \
+  -DENABLE_IPC=OFF \
+  -DWITH_ZMQ=OFF
 ```
-# HCScoin mainnet configuration
-rpcuser=hcscoin
-rpcpassword=<your-strong-password>
+
+## Build
+
+```bash
+cmake --build build --parallel 2
+```
+
+Use a larger `--parallel` value on machines with enough RAM.
+
+## Verify
+
+```bash
+build/bin/hcscoind --version
+build/bin/hcscoin-cli --version
+```
+
+## Install locally
+
+```bash
+sudo install -m 0755 build/bin/hcscoin /usr/local/bin/hcscoin
+sudo install -m 0755 build/bin/hcscoind /usr/local/bin/hcscoind
+sudo install -m 0755 build/bin/hcscoin-cli /usr/local/bin/hcscoin-cli
+```
+
+## Run
+
+```bash
+mkdir -p ~/.hcscoin
+cat > ~/.hcscoin/hcscoin.conf <<'EOF'
 server=1
-daemon=1
+rpcuser=hcscoin
+rpcpassword=change-this-password
+EOF
+
+hcscoind -daemon=0 -printtoconsole
 ```
 
-## Running
+Query from another terminal:
 
 ```bash
-# Start daemon
-./hcscoind -daemon
-
-# Check status
-./hcscoin-cli getblockchaininfo
-
-# Generate a new post-quantum Dilithium address
-./hcscoin-cli getnewaddress
-
-# Send test transaction
-./hcscoin-cli sendtoaddress <address> 0.1
+hcscoin-cli getblockchaininfo
 ```
 
-## Testnet
+## Docker
 
 ```bash
-./hcscoind -testnet -daemon
-./hcscoin-cli -testnet getblockchaininfo
+docker build -t hcscoin:local .
+docker run --rm hcscoin:local --version
+docker compose up --build
 ```
-
-## GPU Miner Setup
-
-See [MINING.md](MINING.md).
